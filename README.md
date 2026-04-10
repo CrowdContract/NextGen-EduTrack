@@ -1,8 +1,7 @@
 # 🎓 NextGen EduTrack
 
-A comprehensive Final Year Project (FYP) Management System designed to streamline the supervision, submission, and evaluation process for university projects. Built with modern web technologies to provide an intuitive experience for students, teachers, and administrators.
+A comprehensive year wise Project Management System designed to streamline the supervision, submission, and evaluation process for university projects. Built with modern web technologies to provide an intuitive experience for students, teachers, and administrators.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![React](https://img.shields.io/badge/react-19.1.1-61dafb.svg)
 
@@ -454,10 +453,6 @@ Contributions are welcome! Please follow these steps:
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👥 Authors
 
