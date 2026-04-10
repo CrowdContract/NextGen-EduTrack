@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+Projecthub/node_modules/
+Projecthub/client/node_modules/
+Projecthub/server/node_modules/
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+Projecthub/server/.env
+*/.env
+
+# Build outputs
+dist/
+build/
+Projecthub/client/dist/
+Projecthub/client/build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+Projecthub/server/temp/*
+!Projecthub/server/temp/.gitkeep
+
+# Uploads (keep structure but ignore files)
+Projecthub/server/uploads/*
+!Projecthub/server/uploads/.gitkeep
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.bak
+*.cache
+.eslintcache

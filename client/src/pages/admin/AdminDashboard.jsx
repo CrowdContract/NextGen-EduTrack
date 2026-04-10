@@ -1,0 +1,559 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Cell,
+} from "recharts";
+import { useDispatch, useSelector } from "react-redux";
+import { User, Box, AlertCircle, Folder, AlertTriangle } from "lucide-react";
+
+import AddStudent from "../../components/modal/AddStudent";
+import AddTeacher from "../../components/modal/AddTeacher";
+import { toggleStudentModal, toggleTeacherModal } from "../../store/slices/popupSlice";
+
+import { toast } from "react-toastify";
+import { axiosInstance } from "../../lib/axios";
+// 🔹 Thunks (make sure you import these)
+import { getDashboardStats } from "../../store/slices/adminSlice";
+import { getNotifications } from "../../store/slices/notificationSlice";
+import { getAllProjects } from "../../store/slices/projectSlice";
+import { downloadProjectFile } from "../../store/slices/projectSlice";
+const AdminDashboard = () => {
+  // 🔹 Modal state
+  const { isCreateStudentModalOpen, isCreateTeacherModalOpen } =
+    useSelector((state) => state.popup);
+
+  // 🔹 Redux data
+  const { stats } = useSelector((state) => state.admin);
+  const { projects } = useSelector((state) => state.project);
+  const notifications = useSelector((state) => state.notifications.list);
+  const dispatch = useDispatch();
+
+  // 🔹 Local state
+  const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
+  const [reportSearch, setReportSearch] = useState("");
+
+  // 🔹 Fetch all data
+  useEffect(() => {
+    dispatch(getDashboardStats());
+    dispatch(getNotifications());
+    dispatch(getAllProjects());
+  }, [dispatch]);
+
+  // 🔹 Deadlines within 3 days
+  const nearingDeadlines = useMemo(() => {
+    const now = new Date();
+    const threeDays = 3 * 24 * 60 * 60 * 1000;
+
+    return (projects || []).filter((p) => {
+      if (!p.deadline) return false;
+
+      const d = new Date(p.deadline);
+      return d >= now && d.getTime() - now.getTime() <= threeDays;
+    }).length;
+  }, [projects]);
+
+  // 🔹 Flatten all files
+  const files = useMemo(() => {
+    return (projects || []).flatMap((p) =>
+      (p.files || []).map((f) => ({
+        projectId: p._id,
+        fileId: f._id,
+        originalName: f.originalName,
+        uploadedAt: f.uploadedAt,
+        projectTitle: p.title,
+        studentName: p.student?.name,
+      }))
+    );
+  }, [projects]);
+
+  // 🔹 Filter files (search)
+  const filteredFiles = files.filter((f) =>
+    (f.originalName || "")
+      .toLowerCase()
+      .includes(reportSearch.toLowerCase()) ||
+    (f.projectTitle || "")
+      .toLowerCase()
+      .includes(reportSearch.toLowerCase()) ||
+    (f.studentName || "")
+      .toLowerCase()
+      .includes(reportSearch.toLowerCase())
+  );
+
+ const handleDownload = async (projectId, fileId, name) => {
+  try {
+    const res = await axiosInstance.get(
+      `/project/${projectId}/files/${fileId}/download`,
+      { responseType: "blob" }
+    );
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.setAttribute("download", name || "download");
+
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    toast.success("Download successful ");
+  } catch (error) {
+    toast.error("Failed to download file ");
+  }
+};
+
+
+const supervisorsBucket = useMemo(() => {
+  const map = new Map();
+
+  (projects || []).forEach((p) => {
+    if (!p?.supervisor?.name) return;
+
+    const name = p.supervisor.name;
+    map.set(name, (map.get(name) || 0) + 1);
+  });
+
+  const arr = Array.from(map.entries()).map(([name, count]) => ({
+    name,
+    count,
+  }));
+
+  arr.sort((a, b) => b.count - a.count);
+
+  return arr;
+}, [projects]);
+
+const getBulletColor = (type, priority) => {
+  const t = (type || "").toLowerCase();
+  const p = (priority || "").toLowerCase();
+
+  if (p === "high" && (t === "rejection" || t === "reject"))
+    return "bg-red-600";
+
+  if (p === "medium" && (t === "deadline" || t === "due"))
+    return "bg-orange-500";
+
+  if (p === "medium") return "bg-yellow-500";
+  if (p === "low") return "bg-slate-400";
+
+  // fallback by type
+  if (t === "approval" || t === "approved") return "bg-green-600";
+  if (t === "request") return "bg-blue-600";
+  if (t === "feedback") return "bg-purple-600";
+  if (t === "meeting") return "bg-cyan-600";
+  if (t === "system") return "bg-slate-600";
+
+  return "bg-slate-400";
+};
+const getBadgeClasses = (kind, value) => {
+  const v = (value || "").toLowerCase();
+
+  if (kind === "type") {
+    if (["rejection", "reject"].includes(v))
+      return "bg-red-100 text-red-800";
+
+    if (["approval", "approved"].includes(v))
+      return "bg-green-100 text-green-800";
+
+    if (["deadline", "due"].includes(v))
+      return "bg-orange-100 text-orange-800";
+
+    if (v === "request") return "bg-blue-100 text-blue-800";
+    if (v === "feedback") return "bg-purple-100 text-purple-800";
+    if (v === "meeting") return "bg-cyan-100 text-cyan-800";
+    if (v === "system") return "bg-slate-100 text-slate-800";
+
+    return "bg-gray-100 text-gray-800";
+  }
+
+  // 🔹 priority
+  if (v === "high") return "bg-red-100 text-red-800";
+  if (v === "medium") return "bg-yellow-100 text-yellow-800";
+  if (v === "low") return "bg-gray-100 text-gray-800";
+
+  return "bg-slate-100 text-slate-800";
+};
+
+const dashboardStats = [
+  {
+    title: "Total Students",
+    value: stats?.totalStudents ?? 0,
+    bg: "bg-blue-100",
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+    Icon: User,
+  },
+  {
+    title: "Total Teachers",
+    value: stats?.totalTeachers ?? 0,
+    bg: "bg-green-100",
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    Icon: Box,
+  },
+  {
+    title: "Pending Requests",
+    value: stats?.pendingRequests ?? 0,
+    bg: "bg-orange-100",
+    iconBg: "bg-orange-100",
+    iconColor: "text-orange-600",
+    Icon: AlertCircle,
+  },
+  {
+    title: "Active Projects",
+    value: stats?.totalProjects ?? 0,
+    bg: "bg-yellow-100",
+    iconBg: "bg-yellow-100",
+    iconColor: "text-yellow-600",
+    Icon: Folder,
+  },
+  {
+    title: "Nearing Deadlines",
+    value: nearingDeadlines,
+    bg: "bg-red-100",
+    iconBg: "bg-red-100",
+    iconColor: "text-red-600",
+    Icon: AlertTriangle,
+  },
+];
+const latestNotifications = useMemo(() => {
+  return (notifications || []).slice(0, 6);
+}, [notifications]);
+
+const actionButtons = [
+  {
+    label: "Add Student",
+    onClick: () => dispatch(toggleStudentModal()),
+    btnClass: "btn-primary",
+    Icon: User,
+  },
+  {
+    label: "Add Teacher",
+    onClick: () => dispatch(toggleTeacherModal()),
+    btnClass: "btn-secondary",
+    Icon: User,
+  },
+  {
+    label: "View Reports",
+    onClick: () => setIsReportsModalOpen(true),
+    btnClass: "btn-outline",
+    Icon: Folder,
+  },
+];
+
+return (
+  <>
+    <div className="space-y-6">
+      {/* 🔹 HEADER */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
+        <h1 className="text-2xl font-bold mb-2">Admin Dashboard</h1>
+        <p className="text-blue-100">
+          Manage the entire project management system and oversee all activities.
+        </p>
+      </div>
+
+      {/* 🔹 STATS CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {dashboardStats.map((item, i) => {
+          return (
+            <div key={i} className={`${item.bg} rounded-lg p-4`}>
+              <div className="flex items-center">
+                
+                {/* Icon */}
+                <div className={`p-2 ${item.iconBg} rounded-lg`}>
+                  <item.Icon
+                    className={`w-6 h-6 ${item.iconColor}`}
+                  />
+                </div>
+
+                {/* Text */}
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-slate-600">
+                    {item.title}
+                  </p>
+                  <p className="text-sm font-medium text-slate-800">
+                    {item.value}
+                  </p>
+                </div>
+
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* CHARTS & ACTIVITY */}
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  {/* Vertical Bar Chart */}
+  <div className="lg:col-span-2 card">
+    
+    <div className="card-header">
+      <h3 className="card-title">
+        Project Distribution by Supervisor
+      </h3>
+    </div>
+
+    <div className="p-4">
+      {supervisorsBucket.length === 0 ? (
+        <div className="h-64 flex items-center justify-center bg-slate-50 rounded text-slate-500">
+          No data
+        </div>
+      ) : (
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            
+            <BarChart
+              data={supervisorsBucket}
+              margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
+              barCategoryGap="20%"
+            >
+
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+
+              {/* X AXIS */}
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 12, fill: "#334155" }}
+                axisLine={{ stroke: "#CBD5E1" }}
+                tickLine={{ stroke: "#CBD5E1" }}
+                interval={0}
+                height={50}
+                dy={10}
+              />
+
+              {/* Y AXIS */}
+              <YAxis
+                allowDecimals={false}
+                tick={{ fontSize: 12, fill: "#334155" }}
+                axisLine={{ stroke: "#CBD5E1" }}
+                tickLine={{ stroke: "#CBD5E1" }}
+              />
+
+              {/* TOOLTIP */}
+              <Tooltip
+                cursor={{ fill: "rgba(99, 102, 241, 0.05)" }}
+                contentStyle={{
+                  borderRadius: 8,
+                  borderColor: "#E2E8F0",
+                }}
+                formatter={(value, name) => [
+                  value,
+                  name === "count" ? "Projects Assigned" : name,
+                ]}
+                labelFormatter={(label) => `Supervisor: ${label}`}
+              />
+
+              {/* BAR */}
+              <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                {supervisorsBucket.map((entry, index) => {
+                  const colors = [
+                    "#1E3A8A",
+                    "#2563EB",
+                    "#3B82F6",
+                    "#60A5FA",
+                    "#93C5FD",
+                  ];
+
+                  return (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={colors[index % colors.length]}
+                    />
+                  );
+                })}
+              </Bar>
+
+            </BarChart>
+
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+
+  </div>
+  {/* Recent Activity */}
+<div className="card">
+  <div className="card-header">
+    <h3 className="card-title">Recent Activity</h3>
+  </div>
+
+  <div className="space-y-3">
+    {latestNotifications.map((n) => {
+      return (
+        <div key={n._id} className="flex items-center text-sm">
+          
+          {/* 🔹 Bullet */}
+          <div
+            className={`mt-1 w-2 h-2 ${getBulletColor(
+              n.type,
+              n.priority
+            )} rounded-full mr-3`}
+          />
+
+          {/* 🔹 Content */}
+          <div className="flex-1">
+            <p className="font-medium text-slate-800">
+              {n.message}
+            </p>
+
+            <div className="mt-1 flex items-center gap-2">
+              
+              {/* TYPE */}
+              <span
+                className={`px-2 py-0.5 rounded text-xs font-medium ${getBadgeClasses(
+                  "type",
+                  String(n.type)
+                )}`}
+              >
+                Type: {n.type}
+              </span>
+
+              {/* PRIORITY */}
+              <span
+                className={`px-2 py-0.5 rounded text-xs font-medium ${getBadgeClasses(
+                  "priority",
+                  String(n.priority)
+                )}`}
+              >
+                {n.priority}
+              </span>
+
+            </div>
+          </div>
+        </div>
+      );
+    })}
+
+    {/* 🔻 EMPTY STATE */}
+    {latestNotifications.length === 0 && (
+      <div className="text-slate-500 text-sm">
+        No recent notifications
+      </div>
+    )}
+  </div>
+</div>
+</div>
+
+
+<div className="card">
+  <div className="card-header">
+    <h3 className="card-title">Quick Actions</h3>
+  </div>
+
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {actionButtons.map((btn, index) => {
+      return (
+        <button
+          key={index}
+          className={`${btn.btnClass} flex items-center justify-center space-x-2`}
+          onClick={btn.onClick}
+        >
+          <btn.Icon className="w-5 h-5" />
+          <span>{btn.label}</span>
+        </button>
+      );
+    })}
+  </div>
+</div>
+
+
+
+{isReportsModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    
+    <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-screen overflow-y-auto">
+      
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-slate-900">
+          All Files
+        </h3>
+
+        <button
+          onClick={() => setIsReportsModalOpen(false)}
+          className="text-slate-400 hover:text-slate-600"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* SEARCH */}
+      <div className="mb-4">
+        <input
+          type="text"
+          className="input w-full"
+          placeholder="Search by file name, project title, or student name"
+          value={reportSearch}
+          onChange={(e) => setReportSearch(e.target.value)}
+        />
+      </div>
+
+      {/* FILE LIST */}
+      {filteredFiles.length === 0 ? (
+        <div className="text-slate-500">No files found.</div>
+      ) : (
+        <div className="space-y-2">
+          {filteredFiles.map((f, i) => {
+            return (
+              <div
+                key={i}
+                className="flex items-center justify-between p-3 bg-slate-50 rounded"
+              >
+                
+                {/* FILE INFO */}
+                <div>
+                  <div className="font-medium text-slate-800">
+                    {f.originalName}
+                  </div>
+
+                  <div className="text-sm text-slate-500">
+                    {f.projectTitle} • {f.studentName}
+                  </div>
+                </div>
+
+                {/* DOWNLOAD */}
+                <button
+                  className="btn-outline btn-small"
+                  onClick={() =>
+                    handleDownload(
+                      f.projectId,
+                      f.fileId,
+                      f.originalName
+                    )
+                  }
+                >
+                  Download
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+
+{isCreateStudentModalOpen && (
+  <AddStudent handleCloseModal={() => dispatch(toggleStudentModal())} />
+)}
+
+{isCreateTeacherModalOpen && (
+  <AddTeacher handleCloseModal={() => dispatch(toggleTeacherModal())} />
+)}
+
+    </div>
+  </>
+);
+};
+
+export default AdminDashboard;
