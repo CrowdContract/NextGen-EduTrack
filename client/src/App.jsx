@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -14,6 +14,7 @@ import { Loader } from "lucide-react";
 import LoginPage from "./pages/auth/LoginPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import RegisterPage from "./pages/auth/RegisterPage";
 
 // Layout
 import DashboardLayout from "./components/layout/DashboardLayout";
@@ -35,53 +36,49 @@ import FeedbackPage from "./pages/student/FeedbackPage";
 import NotificationsPage from "./pages/student/NotificationsPage";
 import AiAssistant from "./pages/student/AiAssistant";
 import CodeExplainer from "./pages/student/CodeExplainer";
+
+// Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import PendingRequests from "./pages/teacher/PendingRequests";
 import AssignedStudents from "./pages/teacher/AssignedStudents";
 import TeacherFiles from "./pages/teacher/TeacherFiles";
 import AiGrading from "./pages/teacher/AiGrading";
+
 import QuickTasksFAB from "./components/QuickTasksFAB";
+
+// ✅ ProtectedRoute defined OUTSIDE App to prevent re-creation on every render
+const ProtectedRoute = ({ children, allowedRoles, authUser }) => {
+  if (!authUser) return <Navigate to="/login" replace />;
+
+  if (allowedRoles && !allowedRoles.includes(authUser.role)) {
+    const redirectPath =
+      authUser.role === "Admin" ? "/admin" :
+      authUser.role === "Teacher" ? "/teacher" : "/student";
+    return <Navigate to={redirectPath} replace />;
+  }
+
+  return children;
+};
+
 const App = () => {
   const dispatch = useDispatch();
   const { authUser, isCheckingAuth } = useSelector((state) => state.auth);
+  const adminDataLoaded = useRef(false);
 
-  // 🔥 Check user on load
+  // Check auth on load — once
   useEffect(() => {
     dispatch(getUser());
   }, [dispatch]);
 
-  // 🔥 Load admin data
+  // Load admin data — only once when admin is confirmed
   useEffect(() => {
-    if (authUser?.role === "Admin") {
+    if (authUser?.role === "Admin" && !adminDataLoaded.current) {
+      adminDataLoaded.current = true;
       dispatch(getAllUsers());
       dispatch(getAllProjects());
     }
-  }, [authUser, dispatch]); // ✅ FIXED
+  }, [authUser?._id, authUser?.role, dispatch]);
 
-  // ✅ Protected Route
-  const ProtectedRoute = ({ children, allowedRoles }) => {
-    if (!authUser) {
-      return <Navigate to="/login" replace />;
-    }
-
-    if (
-      allowedRoles &&
-      !allowedRoles.includes(authUser.role)
-    ) {
-      const redirectPath =
-        authUser.role === "Admin"
-          ? "/admin"
-          : authUser.role === "Teacher"
-          ? "/teacher"
-          : "/student";
-
-      return <Navigate to={redirectPath} replace />;
-    }
-
-    return children;
-  };
-
-  // ✅ Loader
   if (isCheckingAuth && !authUser) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -90,52 +87,27 @@ const App = () => {
     );
   }
 
+  const roleHome = authUser?.role === "Admin" ? "/admin" :
+                   authUser?.role === "Teacher" ? "/teacher" : "/student";
+
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* DEFAULT REDIRECT */}
-        <Route
-          path="/"
-          element={
-            authUser ? (
-              authUser.role === "Admin" ? (
-                <Navigate to="/admin" />
-              ) : authUser.role === "Teacher" ? (
-                <Navigate to="/teacher" />
-              ) : (
-                <Navigate to="/student" />
-              )
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
+        {/* DEFAULT */}
+        <Route path="/" element={authUser ? <Navigate to={roleHome} /> : <Navigate to="/login" />} />
 
         {/* AUTH */}
-        <Route
-          path="/login"
-          element={
-            !authUser ? (
-              <LoginPage />
-            ) : authUser.role === "Admin" ? (
-              <Navigate to="/admin" />
-            ) : authUser.role === "Teacher" ? (
-              <Navigate to="/teacher" />
-            ) : (
-              <Navigate to="/student" />
-            )
-          }
-        />
-
+        <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to={roleHome} />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/register" element={!authUser ? <RegisterPage /> : <Navigate to={roleHome} />} />
 
-        {/* ================= ADMIN ================= */}
+        {/* ===== ADMIN ===== */}
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={["Admin"]}>
+            <ProtectedRoute allowedRoles={["Admin"]} authUser={authUser}>
               <DashboardLayout userRole="Admin" />
             </ProtectedRoute>
           }
@@ -148,11 +120,11 @@ const App = () => {
           <Route path="projects" element={<ProjectsPage />} />
         </Route>
 
-        {/* ================= STUDENT ================= */}
+        {/* ===== STUDENT ===== */}
         <Route
           path="/student"
           element={
-            <ProtectedRoute allowedRoles={["Student"]}>
+            <ProtectedRoute allowedRoles={["Student"]} authUser={authUser}>
               <DashboardLayout userRole="Student" />
             </ProtectedRoute>
           }
@@ -166,21 +138,29 @@ const App = () => {
           <Route path="ai-assistant" element={<AiAssistant />} />
           <Route path="code-explainer" element={<CodeExplainer />} />
         </Route>
-      {/* Teacher Routes */}
-<Route
-  path="/teacher"
-  element={
-    <ProtectedRoute allowedRoles={["Teacher"]}>
-      <DashboardLayout userRole={"Teacher"} />
-    </ProtectedRoute>
-  }
->
-  <Route index element={<TeacherDashboard />} />
-  <Route path="pending-requests" element={<PendingRequests />} />
-  <Route path="assigned-students" element={<AssignedStudents />} />
-  <Route path="files" element={<TeacherFiles />} />
-  <Route path="ai-grading" element={<AiGrading />} />
-</Route>
+
+        {/* ===== TEACHER ===== */}
+        <Route
+          path="/teacher"
+          element={
+            <ProtectedRoute allowedRoles={["Teacher"]} authUser={authUser}>
+              <DashboardLayout userRole="Teacher" />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<TeacherDashboard />} />
+          <Route path="pending-requests" element={<PendingRequests />} />
+          <Route path="assigned-students" element={<AssignedStudents />} />
+          <Route path="files" element={<TeacherFiles />} />
+          <Route path="ai-grading" element={<AiGrading />} />
+        </Route>
+
+        {/* CATCH ALL */}
+        <Route
+          path="*"
+          element={authUser ? <Navigate to={roleHome} replace /> : <Navigate to="/login" replace />}
+        />
+
       </Routes>
 
       <ToastContainer theme="dark" />

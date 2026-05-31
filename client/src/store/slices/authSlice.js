@@ -2,6 +2,22 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance } from "../../lib/axios";
 import { toast } from "react-toastify";
 
+// ================= GUEST LOGIN =================
+export const guestLogin = createAsyncThunk(
+  "auth/guestLogin",
+  async (role, thunkAPI) => {
+    try {
+      const res = await axiosInstance.post("/auth/guest-login", { role });
+      toast.success(res.data.message);
+      return res.data.user;
+    } catch (error) {
+      const message = error.response?.data?.message || "Guest login failed";
+      toast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 // ================= LOGIN =================
 export const login = createAsyncThunk(
   "auth/login",
@@ -128,6 +144,18 @@ const authSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
+
+      // ===== GUEST LOGIN =====
+      .addCase(guestLogin.pending, (state) => {
+        state.isLoggingIn = true;
+      })
+      .addCase(guestLogin.fulfilled, (state, action) => {
+        state.isLoggingIn = false;
+        state.authUser = action.payload;
+      })
+      .addCase(guestLogin.rejected, (state) => {
+        state.isLoggingIn = false;
+      })
 
       // ===== LOGIN =====
       .addCase(login.pending, (state) => {
