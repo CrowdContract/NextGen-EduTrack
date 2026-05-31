@@ -13,32 +13,36 @@ export const guestLogin = asyncHandler(async (req, res, next) => {
   const { role } = req.body;
 
   const guestCredentials = {
-    Admin:   { email: "guest.admin@projecthub.demo",   password: "guest1234" },
-    Teacher: { email: "guest.teacher@projecthub.demo", password: "guest1234" },
-    Student: { email: "guest.student@projecthub.demo", password: "guest1234" },
+    Admin:   { email: "guest.admin@projecthub.com",   password: "guest1234" },
+    Teacher: { email: "guest.teacher@projecthub.com", password: "guest1234" },
+    Student: { email: "guest.student@projecthub.com", password: "guest1234" },
   };
 
   const creds = guestCredentials[role];
   if (!creds) return next(new ErrorHandler("Invalid role", 400));
 
-  // Find or create guest user
-  let user = await User.findOne({ email: creds.email, role });
+  try {
+    // Find or create guest user
+    let user = await User.findOne({ email: creds.email });
 
-  if (!user) {
-    const guestNames = { Admin: "Guest Admin", Teacher: "Guest Teacher", Student: "Guest Student" };
-    user = await User.create({
-      name: guestNames[role],
-      email: creds.email,
-      password: creds.password,
-      role,
-      isGuest: true,
-      department: role === "Teacher" ? "Computer Science" : role === "Student" ? "Computer Science" : undefined,
-      expertise: role === "Teacher" ? ["React", "Node.js"] : [],
-      maxStudents: role === "Teacher" ? 10 : undefined,
-    });
+    if (!user) {
+      const guestNames = { Admin: "Guest Admin", Teacher: "Guest Teacher", Student: "Guest Student" };
+      user = await User.create({
+        name: guestNames[role],
+        email: creds.email,
+        password: creds.password,
+        role,
+        department: "Computer Science",
+        expertise: role === "Teacher" ? ["React", "Node.js"] : [],
+        maxStudents: role === "Teacher" ? 10 : 5,
+      });
+    }
+
+    generateToken(user, 200, `Logged in as Guest ${role}`, res);
+  } catch (err) {
+    console.error("GUEST LOGIN ERROR:", err.message);
+    return next(new ErrorHandler(err.message, 500));
   }
-
-  generateToken(user, 200, `Logged in as Guest ${role}`, res);
 });
 
 // REGISTER USER

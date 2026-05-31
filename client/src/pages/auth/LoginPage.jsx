@@ -61,10 +61,23 @@ const LoginPage = () => {
     dispatch(login(formData));
   };
 
+  const GUEST_CREDS = {
+    Admin:   { email: "guest.admin@projecthub.com",   password: "guest1234" },
+    Teacher: { email: "guest.teacher@projecthub.com", password: "guest1234" },
+    Student: { email: "guest.student@projecthub.com", password: "guest1234" },
+  };
+
   const handleGuest = async (role) => {
+    // Auto-fill the form with guest credentials
+    setFormData({ email: GUEST_CREDS[role].email, password: GUEST_CREDS[role].password, role });
     setGuestLoadingRole(role);
-    await dispatch(guestLogin(role));
-    setGuestLoadingRole(null);
+    try {
+      await dispatch(guestLogin(role)).unwrap();
+    } catch (e) {
+      // error already toasted in thunk
+    } finally {
+      setGuestLoadingRole(null);
+    }
   };
 
   useEffect(() => {
@@ -99,7 +112,7 @@ const LoginPage = () => {
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Sign in to your account</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
             {/* Role */}
             <div>
