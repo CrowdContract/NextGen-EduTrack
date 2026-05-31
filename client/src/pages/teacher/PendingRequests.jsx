@@ -21,7 +21,7 @@ const SkeletonCard = () => (
 
 const PendingRequests = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("pending");
   const [loadingMap, setLoadingMap] = useState({});
 
   const dispatch = useDispatch();
@@ -29,8 +29,8 @@ const PendingRequests = () => {
   const { authUser } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(getTeacherRequests(authUser?._id));
-  }, [dispatch, authUser?._id]);
+    dispatch(getTeacherRequests());
+  }, [dispatch]);
 
   const setLoading = (id, key, value) => {
     setLoadingMap((prev) => ({
@@ -125,8 +125,7 @@ const PendingRequests = () => {
             const id = req._id;
             const project = req.latestProject;
             const projectStatus = project?.status?.toLowerCase() || "pending";
-            const supervisorAssigned = !!project?.supervisor;
-            const canAccept = req.status === "pending" && !supervisorAssigned;
+            const canAccept = req.status === "pending";
             const lm = loadingMap[id] || {};
 
             let bgClass = "";
@@ -136,9 +135,6 @@ const PendingRequests = () => {
               bgClass = "bg-green-50 dark:bg-green-900/10 border-green-300 dark:border-green-800";
             } else if (req.status === "rejected") {
               bgClass = "bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-800";
-            } else if (supervisorAssigned) {
-              bgClass = "bg-blue-50 dark:bg-blue-900/10 border-blue-300 dark:border-blue-800";
-              statusMessage = "Supervisor already assigned";
             } else if (projectStatus === "rejected") {
               bgClass = "bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-800";
               statusMessage = "Project proposal rejected";

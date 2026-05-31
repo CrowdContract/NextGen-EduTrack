@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAssignedStudents, giveFeedback } from "../../store/slices/teacherSlice";
+import { markProjectCompleted } from "../../store/slices/projectSlice";
 import { suggestFeedback, clearSuggestedFeedback } from "../../store/slices/aiSlice";
-import { Users, MessageSquarePlus, X, Sparkles } from "lucide-react";
+import { Users, MessageSquarePlus, X, Sparkles, CheckCircle2 } from "lucide-react";
 
 const FeedbackModal = ({ student, project, onClose }) => {
   const dispatch = useDispatch();
@@ -178,13 +179,29 @@ const AssignedStudents = () => {
                           <p className="text-xs text-slate-400">
                             {project.files?.length || 0} file(s) · {project.feedback?.length || 0} feedback(s)
                           </p>
-                          <button
-                            onClick={() => setFeedbackTarget({ student, project })}
-                            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                          >
-                            <MessageSquarePlus size={13} />
-                            Feedback
-                          </button>
+                          <div className="flex gap-2">
+                            {project.status !== "completed" && (
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm("Mark this project as completed?")) {
+                                    await dispatch(markProjectCompleted(project._id));
+                                    dispatch(getAssignedStudents());
+                                  }
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                              >
+                                <CheckCircle2 size={13} />
+                                Complete
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setFeedbackTarget({ student, project })}
+                              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                            >
+                              <MessageSquarePlus size={13} />
+                              Feedback
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ) : (

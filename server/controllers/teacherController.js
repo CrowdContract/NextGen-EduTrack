@@ -11,9 +11,9 @@ import {
   generateRequestRejectedTemplate,
 } from "../utils/emailTemplate.js";
 
-import { sendEmail } from "../utils/sendEmail.js"; // ✅ FIXED
+import { sendEmail } from "../services/emailServices.js";
 
-import ErrorHandler from "../utils/errorHandler.js";
+import ErrorHandler from "../middlewares/error.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 
 // ================= DASHBOARD =================
@@ -49,10 +49,10 @@ export const getTeacherDashboardStats = asyncHandler(async (req, res, next) => {
 
 // ================= GET REQUESTS =================
 export const getRequests = asyncHandler(async (req, res, next) => {
-  const { supervisor } = req.query;
+  // Use query param if provided, otherwise default to logged-in teacher's ID
+  const supervisorId = req.query.supervisor || req.user._id;
 
-  const filters = {};
-  if (supervisor) filters.supervisor = supervisor;
+  const filters = { supervisor: supervisorId };
 
   const { requests, total } = await requestServices.getAllRequests(filters);
 
@@ -96,9 +96,9 @@ export const acceptRequest = asyncHandler(async (req, res, next) => {
   // 🔔 Notification
   await notificationServices.notifyUser(
     request.student._id,
-    `Your supervisor request has been accepted by ${req.user.name}`,
+    `Your supervisor request has been accepted by ${req.user.name}. Your project has been approved!`,
     "approval",
-    "/students/status",
+    "/student",
     "low"
   );
 

@@ -7,19 +7,29 @@ const StudentDashboard = () => {
   const dispatch = useDispatch();
 
   const { authUser } = useSelector((state) => state.auth);
-  const { dashboardStats } = useSelector((state) => state.student);
-console.log("dashboardStats:", dashboardStats);
+  const { dashboardStats, loading } = useSelector((state) => state.student);
+
   useEffect(() => {
-    dispatch(fetchDashboardStats());
-  }, [dispatch]);
+    if (authUser?.role === "Student") {
+      dispatch(fetchDashboardStats());
+    }
+
+    // Refresh when tab becomes visible again (e.g. teacher marked complete)
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && authUser?.role === "Student") {
+        dispatch(fetchDashboardStats());
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [dispatch, authUser?._id]);
 
   // Safe Data Handling
   const project = dashboardStats?.project || {};
   const supervisorName = dashboardStats?.supervisorName || "N/A";
   const upcomingDeadlines = dashboardStats?.upcomingDeadlines || [];
   const topNotifications = dashboardStats?.topNotifications || [];
-  const feedbackList =
-    dashboardStats?.feedbackList?.slice(-2).reverse() || [];
+  const feedbackList = dashboardStats?.feedbackNotifications?.slice(-2).reverse() || [];
 
   // Date Formatter
   const formatDate = (dateStr) => {
@@ -64,7 +74,7 @@ console.log("dashboardStats:", dashboardStats);
         {/* Project Title */}
         <div className="card">
           <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg"></div>
+            <div className={`p-3 rounded-lg ${project?.status === "completed" ? "bg-green-100" : "bg-blue-100"}`}></div>
             <div className="ml-4">
               <p className="text-sm font-medium text-slate-600">
                 Project Title
@@ -72,6 +82,9 @@ console.log("dashboardStats:", dashboardStats);
               <p className="text-lg font-semibold text-slate-800">
                 {project?.title || "No Project"}
               </p>
+              {project?.status === "completed" && (
+                <span className="text-xs text-green-600 font-medium">Completed</span>
+              )}
             </div>
           </div>
         </div>
@@ -115,8 +128,8 @@ console.log("dashboardStats:", dashboardStats);
                 Recent Feedback
               </p>
               <p className="text-lg font-semibold text-slate-800">
-                {feedbackList.length
-                  ? formatDate(feedbackList[0]?.createdAt)
+                {feedbackList.length > 0
+                  ? `${feedbackList.length} feedback(s)`
                   : "No feedback yet"}
               </p>
             </div>
@@ -165,7 +178,7 @@ console.log("dashboardStats:", dashboardStats);
         <span
           className={`inline-flex items-center px-2 py-[2px] rounded-full text-sm font-medium capitalize
           ${
-            project?.status === "approved"
+            project?.status === "approved" || project?.status === "completed"
               ? "bg-green-100 text-green-800"
               : project?.status === "pending"
               ? "bg-yellow-100 text-yellow-800"

@@ -72,6 +72,10 @@ const projectSchema = new mongoose.Schema(
           required: true,
           maxlength: [1000, "Feedback message cannot be more than 1000 characters"],
         },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
       },
     ],
 

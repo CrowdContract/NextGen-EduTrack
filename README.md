@@ -1,4 +1,4 @@
-# 🎓 NextGen EduTrack
+#  NextGen EduTrack
 
 A comprehensive Final Year Project (FYP) Management System designed to streamline the supervision, submission, and evaluation process for university projects. Built with modern web technologies to provide an intuitive experience for students, teachers, and administrators.
 
@@ -6,9 +6,9 @@ A comprehensive Final Year Project (FYP) Management System designed to streamlin
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![React](https://img.shields.io/badge/react-19.1.1-61dafb.svg)
 
-## ✨ Features
+##  Features
 
-### 👨‍🎓 For Students
+###  For Students
 - **Project Proposal Submission** - Submit and manage project proposals
 - **Supervisor Request System** - Request and connect with supervisors
 - **File Upload & Management** - Upload project files, documentation, and code
@@ -17,7 +17,7 @@ A comprehensive Final Year Project (FYP) Management System designed to streamlin
 - **Real-time Notifications** - Stay updated on project status and feedback
 - **Feedback Tracking** - View and respond to supervisor feedback
 
-### 👨‍🏫 For Teachers
+###  For Teachers
 - **Student Management** - View and manage assigned students
 - **Request Handling** - Accept or reject supervisor requests
 - **AI-Powered Grading** - Automated grading assistance with AI
@@ -25,7 +25,7 @@ A comprehensive Final Year Project (FYP) Management System designed to streamlin
 - **Feedback System** - Provide detailed feedback to students
 - **Dashboard Analytics** - Track student progress and performance
 
-### 👨‍💼 For Administrators
+###  For Administrators
 - **User Management** - Add, edit, and manage students and teachers
 - **Supervisor Assignment** - Assign supervisors to students
 - **Project Oversight** - Monitor all ongoing projects
@@ -33,13 +33,13 @@ A comprehensive Final Year Project (FYP) Management System designed to streamlin
 - **System Analytics** - Comprehensive dashboard with insights
 - **Bulk Operations** - Efficient management of multiple users
 
-### 🤖 AI-Powered Features
+###  AI-Powered Features
 - **Smart Search** - Natural language project search
 - **Code Analysis** - Intelligent code review and suggestions
 - **Automated Grading** - AI-assisted project evaluation
 - **Chat Assistant** - Context-aware help for students and teachers
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **React 19** - Modern UI library
@@ -66,7 +66,7 @@ A comprehensive Final Year Project (FYP) Management System designed to streamlin
 - **Groq SDK** - AI model integration
 - **PDF Parse** - Document processing
 
-## 📋 Prerequisites
+##  Prerequisites
 
 Before you begin, ensure you have the following installed:
 - **Node.js** (v18 or higher) - [Download](https://nodejs.org/)
@@ -89,7 +89,7 @@ mongod --version
 git --version
 ```
 
-## ✅ Setup Checklist
+##  Setup Checklist
 
 Follow this checklist to ensure proper setup:
 
@@ -111,7 +111,7 @@ Follow this checklist to ensure proper setup:
 - [ ] Can access http://localhost:5173
 - [ ] Can access http://localhost:4000/test
 
-## 🚀 Quick Start Guide
+##  Quick Start Guide
 
 ### 1. Clone the Repository
 ```bash
@@ -233,7 +233,7 @@ npm start
 - **Backend API:** http://localhost:4000
 - **API Test:** http://localhost:4000/test
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 NextGen-EduTrack/
@@ -302,13 +302,13 @@ NextGen-EduTrack/
 └── README.md                   # This file
 ```
 
-## 🔐 Default Credentials
+##  Default Credentials
 
 After initial setup, you can create admin credentials through the database or use the registration flow.
 
 **Note:** Change default credentials immediately in production!
 
-## 📡 API Endpoints
+##  API Endpoints
 
 ### Authentication
 - `POST /api/v1/auth/register` - User registration
@@ -344,7 +344,7 @@ After initial setup, you can create admin credentials through the database or us
 - `POST /api/v1/ai/explain-code` - Code explanation
 - `POST /api/v1/ai/grade` - AI-assisted grading
 
-## 🎨 Features in Detail
+##  Features in Detail
 
 ### Dark Mode Support
 The application includes a fully functional dark mode with smooth transitions and persistent theme preferences.
@@ -361,7 +361,7 @@ Secure file upload and storage with support for multiple file types including PD
 ### AI Integration
 Powered by Groq AI for intelligent features like code analysis, smart search, and automated grading assistance.
 
-## 🔧 Configuration
+##  Configuration
 
 ### Email Setup (Gmail)
 1. Enable 2-Factor Authentication in your Google Account
@@ -378,7 +378,7 @@ Powered by Groq AI for intelligent features like code analysis, smart search, an
 2. Get your credentials from the dashboard
 3. Add to `.env` file
 
-## 🧪 Testing
+##  Testing
 
 ```bash
 # Run tests (when available)
@@ -445,7 +445,7 @@ npm install
 - Create a new issue with detailed error logs
 - Join our community discussions
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome! Please follow these steps:
 
@@ -455,25 +455,25 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Authors
+##  Authors
 
 - **CrowdContract Team** - [GitHub](https://github.com/CrowdContract)
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - React and Node.js communities
 - Groq AI for AI capabilities
 - All contributors and testers
 
-## 📞 Support
+##  Support
 
 For support, arpit0112ak@gmail.com.
 
-## 🗺️ Roadmap
+##  Roadmap
 
 - [ ] Mobile application (React Native)
 - [ ] Video conferencing integration

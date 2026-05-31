@@ -83,11 +83,11 @@ export const acceptRequest = async (requestId, supervisorId) => {
   // Set student's supervisor field
   await User.findByIdAndUpdate(studentId, { supervisor: supId });
 
-  // Set project supervisor if project exists and has none
+  // Set project supervisor — update regardless of current supervisor value
   await Project.findOneAndUpdate(
-    { student: studentId, supervisor: null },
-    { supervisor: supId },
-    { sort: { createdAt: -1 } }
+    { student: studentId },
+    { supervisor: supId, status: "approved" },
+    { sort: { createdAt: -1 }, new: true }
   );
 
   return await SupervisorRequest.findById(request._id)

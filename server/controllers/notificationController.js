@@ -78,8 +78,14 @@ export const markAsRead = asyncHandler(async (req, res, next) => {
 // ================= MARK ALL AS READ =================
 export const markAllAsRead = asyncHandler(async (req, res, next) => {
   const userId = req.user._id;
+  const role = req.user.role;
 
-  await notificationServices.markAllAsRead(userId);
+  // Admin notifications are filtered by type, not user
+  const query = role === "Admin"
+    ? { type: { $in: ["request"] }, isRead: false }
+    : { user: userId, isRead: false };
+
+  await Notification.updateMany(query, { $set: { isRead: true } });
 
   res.status(200).json({
     success: true,
@@ -92,7 +98,7 @@ export const deleteNotification = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const userId = req.user._id;
 
-  const notification = await notificationServices.deleteNotification(
+  const notification = await notificationService.deleteNotification(
     id,
     userId
   );
@@ -100,9 +106,6 @@ export const deleteNotification = asyncHandler(async (req, res, next) => {
   if (!notification) {
     return next(new ErrorHandler("Notification not found", 404));
   }
-
-  // Optional: mark all as read after delete (as in your code)
-  await notificationServices.markAllAsRead(userId);
 
   res.status(200).json({
     success: true,

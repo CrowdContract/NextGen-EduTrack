@@ -6,7 +6,7 @@ import { ArrowDownToLine, FolderOpen } from "lucide-react";
 
 const TeacherFiles = () => {
   const dispatch = useDispatch();
-  const { files, loading } = useSelector((state) => state.teacher);
+  const { files = [], loading } = useSelector((state) => state.teacher);
   const [search, setSearch] = useState("");
   const [downloadingId, setDownloadingId] = useState(null);
 

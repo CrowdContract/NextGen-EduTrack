@@ -226,7 +226,7 @@ const LoginPage = () => {
           ))}
 
           <p className="text-center text-xs text-slate-400 dark:text-slate-500 pt-2">
-            Guest accounts have full read/write access for demo purposes
+            Guest accounts have full access — explore everything freely
           </p>
         </motion.div>
 

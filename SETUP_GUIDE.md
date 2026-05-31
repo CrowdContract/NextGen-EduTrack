@@ -1,8 +1,8 @@
-# 🚀 Complete Setup Guide - NextGen EduTrack
+#  Complete Setup Guide - NextGen EduTrack
 
 This guide will walk you through setting up NextGen EduTrack from scratch, even if you're new to web development.
 
-## 📑 Table of Contents
+##  Table of Contents
 1. [Prerequisites Installation](#prerequisites-installation)
 2. [Project Setup](#project-setup)
 3. [Environment Configuration](#environment-configuration)
@@ -430,7 +430,7 @@ npm run build
 
 ---
 
-## 🎉 Success!
+##  Success!
 
 If you've followed all steps and can access both the frontend and backend, congratulations! Your NextGen EduTrack setup is complete.
 
@@ -460,4 +460,4 @@ If you've followed all steps and can access both the frontend and backend, congr
 
 ---
 
-**Happy Coding! 🚀**
+**Happy Coding!**

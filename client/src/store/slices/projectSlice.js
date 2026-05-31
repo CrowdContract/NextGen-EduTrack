@@ -21,6 +21,23 @@ export const getAllProjects = createAsyncThunk(
 );
 
 /* =========================================================
+   🔹 MARK PROJECT COMPLETED
+========================================================= */
+export const markProjectCompleted = createAsyncThunk(
+  "project/markProjectCompleted",
+  async (projectId, thunkAPI) => {
+    try {
+      const res = await axiosInstance.put(`/project/${projectId}/complete`);
+      toast.success("Project marked as completed!");
+      return res.data.data.project;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to mark complete");
+      return thunkAPI.rejectWithValue(error.response?.data?.message);
+    }
+  }
+);
+
+/* =========================================================
    🔹 DOWNLOAD PROJECT FILE
 ========================================================= */
 export const downloadProjectFile = createAsyncThunk(

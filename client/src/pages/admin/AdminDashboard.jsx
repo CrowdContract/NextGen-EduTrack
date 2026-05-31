@@ -20,9 +20,7 @@ import { toast } from "react-toastify";
 import { axiosInstance } from "../../lib/axios";
 // 🔹 Thunks (make sure you import these)
 import { getDashboardStats } from "../../store/slices/adminSlice";
-import { getNotifications } from "../../store/slices/notificationSlice";
-import { getAllProjects } from "../../store/slices/projectSlice";
-import { downloadProjectFile } from "../../store/slices/projectSlice";
+// projects and notifications already loaded by App.jsx — no need to re-fetch here
 const AdminDashboard = () => {
   // 🔹 Modal state
   const { isCreateStudentModalOpen, isCreateTeacherModalOpen } =
@@ -30,7 +28,7 @@ const AdminDashboard = () => {
 
   // 🔹 Redux data
   const { stats } = useSelector((state) => state.admin);
-  const { projects } = useSelector((state) => state.project);
+  const { projects } = useSelector((state) => state.admin); // ✅ use admin projects, not project slice
   const notifications = useSelector((state) => state.notifications.list);
   const dispatch = useDispatch();
 
@@ -38,11 +36,9 @@ const AdminDashboard = () => {
   const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
   const [reportSearch, setReportSearch] = useState("");
 
-  // 🔹 Fetch all data
+  // 🔹 Fetch dashboard stats only — projects/notifications already loaded in App.jsx
   useEffect(() => {
     dispatch(getDashboardStats());
-    dispatch(getNotifications());
-    dispatch(getAllProjects());
   }, [dispatch]);
 
   // 🔹 Deadlines within 3 days
@@ -415,16 +411,6 @@ return (
                 )}`}
               >
                 Type: {n.type}
-              </span>
-
-              {/* PRIORITY */}
-              <span
-                className={`px-2 py-0.5 rounded text-xs font-medium ${getBadgeClasses(
-                  "priority",
-                  String(n.priority)
-                )}`}
-              >
-                {n.priority}
               </span>
 
             </div>

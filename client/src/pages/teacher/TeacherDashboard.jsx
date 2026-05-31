@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { getTeacherDashboardStats } from "../../store/slices/teacherSlice";
 import { Users, Clock, CheckCircle, Loader, MoveDiagonal } from "lucide-react";
 
 const TeacherDashboard = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { dashboardStats, loading } = useSelector((state) => state.teacher);
   const { authUser } = useSelector((state) => state.auth);
@@ -22,6 +24,7 @@ const TeacherDashboard = () => {
       icon: Users,
       bg: "bg-blue-100",
       color: "text-blue-600",
+      link: "/teacher/assigned-students",
     },
     {
       title: "Pending Requests",
@@ -30,6 +33,7 @@ const TeacherDashboard = () => {
       icon: Clock,
       bg: "bg-yellow-100",
       color: "text-yellow-600",
+      link: "/teacher/pending-requests",
     },
     {
       title: "Completed Projects",
@@ -38,6 +42,7 @@ const TeacherDashboard = () => {
       icon: CheckCircle,
       bg: "bg-green-100",
       color: "text-green-600",
+      link: "/teacher/assigned-students",
     },
   ];
 
@@ -54,14 +59,15 @@ const TeacherDashboard = () => {
 
       {/* STATS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {statsCards.map(({ title, value, loading, icon: Icon, bg, color }, i) => (
+        {statsCards.map(({ title, value, loading, icon: Icon, bg, color, link }, i) => (
           <motion.div
             key={title}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08, duration: 0.3 }}
             whileHover={{ y: -3, transition: { duration: 0.15 } }}
-            className="card"
+            onClick={() => navigate(link)}
+            className="card cursor-pointer hover:shadow-md transition-shadow"
           >
             <div className="flex items-center">
               <div className={`p-3 rounded-lg ${bg}`}>

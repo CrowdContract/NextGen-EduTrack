@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createDeadline } from "../../store/slices/deadlineSlice";
+import { getAllProjects } from "../../store/slices/adminSlice";
+
 const DeadlinesPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-
   const [formData, setFormData] = useState({
     projectTitle: "",
     studentName: "",
@@ -12,21 +13,19 @@ const DeadlinesPage = () => {
     deadlineDate: "",
     description: "",
   });
-
   const [selectedProject, setSelectedProject] = useState(null);
   const [query, setQuery] = useState("");
 
   const dispatch = useDispatch();
   const { projects } = useSelector((state) => state.admin);
 
-  const [viewProjects, setViewProjects] = useState(projects || []);
-
+  // ✅ Fetch fresh projects with populated fields on mount
   useEffect(() => {
-    setViewProjects(projects || []);
-  }, [projects]);
+    dispatch(getAllProjects());
+  }, [dispatch]);
 
   const projectRows = useMemo(() => {
-    return (viewProjects || []).map((p) => ({
+    return (projects || []).map((p) => ({
       _id: p._id,
       title: p.title,
       studentName: p.student?.name || "-",
@@ -41,7 +40,7 @@ const DeadlinesPage = () => {
         : "-",
       raw: p,
     }));
-  }, [viewProjects]);
+  }, [projects]);
 
   const filteredProjects = projectRows.filter((row) => {
     const matchesSearch =
@@ -55,54 +54,32 @@ const DeadlinesPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!selectedProject || !formData.deadlineDate) return;
 
-    let deadlineData = {
-      name: selectedProject?.student?.name,
-dueDate: formData.deadlineDate,
-      project: selectedProject?._id,
-    };
-
     try {
-      const updated = await dispatch(
-        createDeadline({
-          id: selectedProject._id,
-          data: deadlineData,
-        })
-      ).unwrap();
+      await dispatch(createDeadline({
+        id: selectedProject._id,
+        data: {
+          name: selectedProject?.student?.name,
+          dueDate: formData.deadlineDate,
+          project: selectedProject?._id,
+        },
+      })).unwrap();
 
-const updatedProject = updated?.data || updated?.project || updated;
-      if (updatedProject?._id) {
-        setViewProjects((prev) =>
-  prev.map((p) =>
-    p._id === updatedProject._id
-      ? {
-          ...p,
-          ...updatedProject,
-          deadline: updatedProject.deadline, // 🔥 FORCE UPDATE
-        }
-      : p
-  )
-);
-      }
+      // ✅ Refresh projects so table updates immediately
+      dispatch(getAllProjects());
     } catch (error) {
       console.log(error);
     } finally {
       setShowModal(false);
-      setFormData({
-        projectTitle: "",
-        studentName: "",
-        supervisor: "",
-        deadlineDate: "",
-        description: "",
-      });
+      setSelectedProject(null);
+      setQuery("");
+      setFormData({ projectTitle: "", studentName: "", supervisor: "", deadlineDate: "", description: "" });
     }
   };
 
   const handleSearch = (e) => {
-    setQuery("");
-    setQuery("");
+    setSearchTerm(e.target.value);
   };
 return (
   <div className="space-y-6">

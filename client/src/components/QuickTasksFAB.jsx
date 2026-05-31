@@ -44,8 +44,10 @@ const QuickTasksFAB = () => {
   const unreadCount = useSelector((s) => s.notifications.unreadCount || 0);
 
   useEffect(() => {
-    dispatch(getNotifications());
-  }, [dispatch]);
+    if (notifications.length === 0) {
+      dispatch(getNotifications());
+    }
+  }, [dispatch]); // ✅ only fetch if not already loaded
 
   // close on outside click
   useEffect(() => {

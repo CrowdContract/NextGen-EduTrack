@@ -182,6 +182,21 @@ export const getFeedback = createAsyncThunk(
   }
 );
 
+// ================= REVOKE SUPERVISOR =================
+export const revokeSupervisor = createAsyncThunk(
+  "student/revokeSupervisor",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.delete("/student/revoke-supervisor");
+      toast.success(res.data.message || "Supervisor request revoked");
+      return null;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to revoke");
+      return thunkAPI.rejectWithValue(error.response?.data?.message);
+    }
+  }
+);
+
 export const downloadFile = createAsyncThunk(
   "student/downloadFile",
   async ({ projectId, fileId }, thunkAPI) => {
@@ -214,7 +229,8 @@ const studentSlice = createSlice({
     supervisors: [],
     supervisor: null,
     files: [],
-     dashboardStats: null, // ✅ FIXED (added)
+    feedback: [],           // ✅ FIXED - was missing
+    dashboardStats: null,
     loading: false,
     error: null,
   },
@@ -261,36 +277,13 @@ const studentSlice = createSlice({
   state.feedback = action.payload || [];
 })
 
+.addCase(revokeSupervisor.fulfilled, (state) => {
+  state.supervisor = null;
+  state.project = null;  // ✅ clear project too so student can resubmit
+})
 
-      // ================= MATCHERS =================
-      .addMatcher(
-        (action) =>
-          action.type.startsWith("student/") &&
-          action.type.endsWith("/pending"),
-        (state) => {
-          state.loading = true;
-          state.error = null;
-        }
-      )
 
-      .addMatcher(
-        (action) =>
-          action.type.startsWith("student/") &&
-          action.type.endsWith("/fulfilled"),
-        (state) => {
-          state.loading = false;
-        }
-      )
-
-      .addMatcher(
-        (action) =>
-          action.type.startsWith("student/") &&
-          action.type.endsWith("/rejected"),
-        (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        }
-      );
+      // ================= MATCHERS — removed to prevent re-render loops =================
   },
 });
 

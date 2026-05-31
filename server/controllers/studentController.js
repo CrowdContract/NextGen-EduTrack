@@ -38,19 +38,19 @@ export const submitProposal = asyncHandler(async (req, res, next) => {
 
   const existingProject = await projectService.getProjectByStudent(studentId);
 
-  if (existingProject && existingProject.status !== "rejected") {
+  if (existingProject && existingProject.status !== "rejected" && existingProject.status !== "completed") {
     return next(
       new ErrorHandler(
-        "You already have an active project. Submit new only if previous rejected.",
+        "You already have an active project. Submit new only if previous was rejected or completed.",
         400
       )
     );
   }
 
-  // ✅ delete rejected project
+  // Delete rejected or completed projects
   await Project.deleteMany({
     student: studentId,
-    status: "rejected",
+    status: { $in: ["rejected", "completed"] },
   });
 
   // ✅ create new project
@@ -234,6 +234,7 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
     const upcomingDeadlines = await Project.find({
       student: studentId,
       deadline: { $gte: now },
+      status: { $nin: ["completed", "rejected"] },
     })
       .select("title description deadline")
       .sort({ deadline: 1 })
@@ -308,39 +309,54 @@ export const getFeedback = asyncHandler(async (req, res, next) => {
 
 export const downloadFile = async (req, res) => {
   try {
-    console.log(" STEP 1");
-
     const { projectId, fileId } = req.params;
-    const studentId = req.user._id;
-
-    console.log("STEP 2");
 
     const project = await projectService.getProjectById(projectId);
-
-    console.log("STEP 3", project);
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    console.log("STEP 4");
-
-    const file = project.files.find(
-      (f) => f._id.toString() === fileId
-    );
-
-    console.log("STEP 5", file);
+    const file = project.files.find((f) => f._id.toString() === fileId);
 
     if (!file) {
       return res.status(404).json({ message: "File not found" });
     }
 
-    console.log("STEP 6", file.fileUrl);
-
-    res.json({ file });
+    // Stream the file to client
+    streamDownload(file.fileUrl, res, file.originalName);
 
   } catch (err) {
-    console.error("FINAL ERROR:", err);
+    console.error("DOWNLOAD ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
+// ================= REVOKE SUPERVISOR REQUEST =================
+export const revokeSupervisor = asyncHandler(async (req, res, next) => {
+  const studentId = req.user._id;
+  const SupervisorRequest = (await import("../models/supervisorRequest.js")).default;
+
+  const student = await User.findById(studentId);
+
+  // 1. Delete ALL supervisor requests for this student
+  await SupervisorRequest.deleteMany({ student: studentId });
+
+  // 2. Remove supervisor from teacher's assignedStudents
+  if (student.supervisor) {
+    await User.findByIdAndUpdate(student.supervisor, {
+      $pull: { assignedStudents: studentId },
+    });
+  }
+
+  // 3. Clear student's supervisor field
+  await User.findByIdAndUpdate(studentId, { supervisor: null });
+
+  // 4. Delete the student's project completely
+  await Project.deleteMany({ student: studentId });
+
+  res.status(200).json({
+    success: true,
+    message: "Supervisor and project revoked successfully. You can now start fresh.",
+  });
+});

@@ -260,41 +260,27 @@ const adminSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ===== USERS =====
       .addCase(getAllUsers.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        // don't toggle loading to avoid re-render loops
       })
       .addCase(getAllUsers.fulfilled, (state, action) => {
-        state.loading = false;
-
         const allUsers = action.payload.data;
-
         state.users = allUsers;
         state.totalUsers = action.payload.total;
-
         state.students = allUsers.filter((u) => u.role === "Student");
         state.teachers = allUsers.filter((u) => u.role === "Teacher");
       })
       .addCase(getAllUsers.rejected, (state, action) => {
-        state.loading = false;
         state.error = action.payload;
       })
 
-       .addCase(getAllProjects.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+      .addCase(getAllProjects.pending, (state) => {
+        // don't set loading=true here to avoid re-render loops
       })
-
-     
       .addCase(getAllProjects.fulfilled, (state, action) => {
-        state.loading = false;
-        state.projects = action.payload; // ✅ FIXED
+        state.projects = action.payload;
       })
-
-     
       .addCase(getAllProjects.rejected, (state, action) => {
-        state.loading = false;
         state.error = action.payload;
       })
 

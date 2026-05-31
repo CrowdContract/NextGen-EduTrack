@@ -37,14 +37,18 @@ const ManageStudents = () => {
     );
 
     return studentUsers.map((student) => {
+      // Match project by comparing string IDs
       const studentProject = (projects || []).find(
-        (p) => p.student === student._id
+        (p) => p.student?._id?.toString() === student._id?.toString() ||
+               p.student?.toString() === student._id?.toString()
       );
 
       return {
         ...student,
         projectTitle: studentProject?.title || null,
-        supervisor: studentProject?.supervisor || null,
+        // Use populated supervisor from user object first, fallback to project
+        supervisorName: student.supervisor?.name || studentProject?.supervisor?.name || null,
+        supervisorId: student.supervisor?._id || student.supervisor || null,
         projectStatus: studentProject?.status || null,
       };
     });
@@ -190,7 +194,9 @@ const ManageStudents = () => {
           <TriangleAlert className="text-yellow-600" />
           <div className="ml-3">
             <p>Unassigned</p>
-            <h2>{students.filter((s) => !s.supervisor).length}</h2>
+            <h2>
+              {students.filter((s) => !s.supervisorName).length}
+            </h2>
           </div>
         </div>
 
@@ -316,15 +322,13 @@ const ManageStudents = () => {
               </td>
 
     <td className="px-6 py-4 whitespace-nowrap">
-  {student.supervisor ? (
+  {student.supervisorName ? (
     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-green-800 bg-green-100">
-      {users?.find((u) => u._id === student?.supervisor)?.name}
+      {student.supervisorName}
     </span>
   ) : (
     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-red-800 bg-red-100">
-      {student.projectStatus === "rejected"
-        ? "Rejected"
-        : "Not Assigned"}
+      {student.projectStatus === "rejected" ? "Rejected" : "Not Assigned"}
     </span>
   )}
 </td>

@@ -146,7 +146,12 @@ export const deleteTeacher = asyncHandler(async (req, res, next) => {
 });
 
 export const getAllUsers = asyncHandler(async (req, res, next) => {
-  const { users, total } = await userServices.getAllUsers(); // ✅ destructure
+  const users = await User.find()
+    .populate("supervisor", "name email")
+    .populate("project", "title status")
+    .sort({ createdAt: -1 });
+
+  const total = users.length;
 
   res.status(200).json({
     success: true,

@@ -6,6 +6,7 @@ import {
   fetchProject,
   getSupervisor,
   requestSupervisor,
+  revokeSupervisor,
 } from "../../store/slices/studentSlice";
 
 const SupervisorPage = () => {
@@ -103,13 +104,25 @@ return (
           />
 
           <div className="flex-1 space-y-4">
-            <div>
-              <h3 className="text-2xl font-bold text-slate-800">
-                {supervisor?.name || "-"}
-              </h3>
-              <p className="text-lg text-slate-600">
-                {supervisor?.department || "-"}
-              </p>
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-2xl font-bold text-slate-800">
+                  {supervisor?.name || "-"}
+                </h3>
+                <p className="text-lg text-slate-600">
+                  {supervisor?.department || "-"}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to revoke this supervisor assignment?")) {
+                    dispatch(revokeSupervisor());
+                  }
+                }}
+                className="px-4 py-2 text-sm font-medium bg-red-100 hover:bg-red-200 text-red-700 rounded-xl transition-colors"
+              >
+                Revoke Supervisor
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -306,21 +319,21 @@ return (
 
 {/* REQUEST MODAL */}
 {showRequestModal && selectedSupervisor && (
-  <div className="modal-overlay">
-    <div className="modal-content">
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-white dark:bg-[#131f35] rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-white/10">
       <div className="p-6">
 
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-800">
+          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
             Request Supervision
           </h3>
-
           <button
-            className="text-slate-400 hover:text-slate-600"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl"
             onClick={() => {
               setShowRequestModal(false);
               setSelectedSupervisor(null);
               setRequestMessage("");
+              setDeadline("");
             }}
           >
             ✕
@@ -328,47 +341,60 @@ return (
         </div>
 
         <div className="space-y-4">
-          <div className="p-4 bg-slate-50 rounded-md">
-            <p className="text-sm text-slate-600">
-              {selectedSupervisor?.name}
+          <div className="p-3 bg-slate-50 dark:bg-white/5 rounded-lg">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Requesting: <span className="text-blue-600">{selectedSupervisor?.name}</span>
             </p>
+            <p className="text-xs text-slate-500">{selectedSupervisor?.email}</p>
           </div>
 
           <div>
-            <label className="label">Message to Supervisor</label>
-
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Message to Supervisor <span className="text-red-500">*</span>
+            </label>
             <textarea
-              className="input min-h-[120px]"
-              required
+              className="w-full border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm bg-white dark:bg-white/5 text-slate-800 dark:text-slate-100 min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={requestMessage}
               onChange={(e) => setRequestMessage(e.target.value)}
-              placeholder="Introduce yourself and explain why you'd like this professor to supervise your project..."
+              placeholder="Introduce yourself and explain your project..."
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Deadline <span className="text-red-500">*</span>
+            </label>
             <input
-  type="date"
-  className="input"
-  value={deadline}
-  onChange={(e) => setDeadline(e.target.value)}
-/>
+              type="date"
+              className="w-full border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm bg-white dark:bg-white/5 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+            />
           </div>
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 mt-4">
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-white/10 mt-4">
           <button
             onClick={() => {
               setShowRequestModal(false);
               setSelectedSupervisor(null);
               setRequestMessage("");
+              setDeadline("");
             }}
-            className="btn-outline"
+            className="px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
           >
             Cancel
           </button>
-
           <button
-            onClick={submitRequest}
-            className="btn-primary"
-            disabled={!selectedSupervisor}
+            onClick={() => {
+              submitRequest();
+              setShowRequestModal(false);
+              setSelectedSupervisor(null);
+              setRequestMessage("");
+              setDeadline("");
+            }}
+            disabled={!requestMessage.trim() || !deadline}
+            className="px-4 py-2 text-sm rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium disabled:opacity-50"
           >
             Send Request
           </button>

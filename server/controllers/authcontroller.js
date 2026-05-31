@@ -31,6 +31,7 @@ export const guestLogin = asyncHandler(async (req, res, next) => {
       email: creds.email,
       password: creds.password,
       role,
+      isGuest: true,
       department: role === "Teacher" ? "Computer Science" : role === "Student" ? "Computer Science" : undefined,
       expertise: role === "Teacher" ? ["React", "Node.js"] : [],
       maxStudents: role === "Teacher" ? 10 : undefined,

@@ -25,12 +25,10 @@ export const getTeacherDashboardStats = createAsyncThunk(
 // ================= GET REQUESTS =================
 export const getTeacherRequests = createAsyncThunk(
   "getTeacherRequests",
-  async (supervisorId, thunkAPI) => {
+  async (_, thunkAPI) => {
     try {
-      const res = await axiosInstance.get(
-        `/teacher/requests?supervisor=${supervisorId}`
-      );
-
+      // No filter — backend uses req.user._id from the JWT token directly
+      const res = await axiosInstance.get("/teacher/requests");
       return res.data.data; // { requests, total }
     } catch (error) {
       toast.error(
@@ -163,7 +161,7 @@ const teacherSlice = createSlice({
       })
       .addCase(getTeacherRequests.fulfilled, (state, action) => {
         state.loading = false;
-        state.pendingRequests = action.payload.requests;
+        state.pendingRequests = action.payload?.requests || [];
       })
       .addCase(getTeacherRequests.rejected, (state) => {
         state.loading = false;
@@ -193,7 +191,7 @@ const teacherSlice = createSlice({
       })
       .addCase(getAssignedStudents.fulfilled, (state, action) => {
         state.loading = false;
-        state.assignedStudents = action.payload.students;
+        state.assignedStudents = action.payload?.students || [];
       })
       .addCase(getAssignedStudents.rejected, (state) => {
         state.loading = false;
@@ -205,7 +203,7 @@ const teacherSlice = createSlice({
       })
       .addCase(getTeacherFiles.fulfilled, (state, action) => {
         state.loading = false;
-        state.files = action.payload.files;
+        state.files = action.payload?.files || [];
       })
       .addCase(getTeacherFiles.rejected, (state) => {
         state.loading = false;
