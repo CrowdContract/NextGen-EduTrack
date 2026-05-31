@@ -95,7 +95,7 @@ const LoginPage = () => {
                 <BookOpen className="text-white w-6 h-6" />
               </div>
             </div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">ProjectHub</h2>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">NextGen EduTrack</h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Sign in to your account</p>
           </div>
 
