@@ -25,6 +25,8 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   "http://localhost:5173",
   "http://localhost:3000",
+  "https://next-gen-edu-track-klaa.vercel.app",
+  "https://next-gen-edu-track.vercel.app",
 ].filter(Boolean);
 
 app.use(
@@ -32,6 +34,8 @@ app.use(
     origin: (origin, callback) => {
       // allow requests with no origin (mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
+      // allow any vercel.app subdomain
+      if (origin.endsWith(".vercel.app")) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
       callback(new Error(`CORS blocked: ${origin}`));
     },
